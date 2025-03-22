@@ -72,6 +72,17 @@ class Program
 
     public void Execute(CancellationTokenSource cts) 
     {
+        /***
+         *  This "defensive" coding experiment tries to
+         *  catch potential problems running multiple async calls
+         *  to functions that might *crash* or *timeout*. The code
+         *  attempts list the exact tasks that timed out or crashed
+         *  TODO:
+         *    - use one CancellationTokenSource per function
+         *    - Mutual exclusion of the entire Execute function
+         *    - dead pool
+         *    - python version
+         */
         _Executing = true;
         var tests = new []
         {
@@ -92,6 +103,7 @@ class Program
         var incomplete = new List<(string Name, string Reason, string Error)>();
         var tests_exec = tests_named.Select(async x => 
             {
+                // Updating delay here to > 10000 should make tasks Run1 and Run2 to run OK
                 var completedTask = await Task.WhenAny(x.Func, Task.Delay(2000, cts.Token));
                 if (completedTask != x.Func)
                 {
